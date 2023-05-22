@@ -6,6 +6,10 @@
  <title>XSS-PHP TEST</title>
 
   <script>
+    function SelectQuotes(i) 
+    {
+        Select('Q',i+1);
+    };
     function Select(type,i) 
     {
         document.getElementById(type+String(i)).setAttribute("checked",true)
@@ -17,7 +21,7 @@
         formObject.submit();
     };
     </script>
-    <script type="text/javascript" src="src/purify.js"></script>
+    //<script type="text/javascript" src="src/purify.js"></script>
 </head>
 <body>
 
@@ -40,18 +44,19 @@
     </div>
 
     
-    <?php 
+<?php 
     require("jsEscape.php");
     $ctx=($_POST['ctx']??1);
     $quotes=($_POST['quotes']??1);
     $defense=($_POST['defense']??1);
     $PAYLOAD = $_POST["P"];
-    //echo "PAYLOAD RECEIVED = ".htmlspecialchars($PAYLOAD);
+    /* echo "PAYLOAD RECEIVED = ".htmlspecialchars($PAYLOAD); */
 
     $DESCRIPTION=$CNAMES[$ctx]." - ".$QNAMES[$quotes]." - ".$DNAMES[$defense];
     echo "<h3> CASE: $DESCRIPTION </h3>";
-    $P0=$PAYLOAD;
     
+    $P0 = $PAYLOAD;
+
     switch ($defense) {
         case 1: 
             $P1=$P0;
@@ -74,83 +79,112 @@
         case 7: 
             $P1=json_encode($P0);
             break;    
-               
-
+         
     };
-    echo "<p>DEFENSE APPLIED TO THE PAYLOAD = ".htmlspecialchars($P1)."</p>";
+    echo "<p class='info'>DEFENSE APPLIED TO THE PAYLOAD = " . htmlspecialchars($P1) . "</p>";
 
-    switch ($quotes) {
-        case 1: 
+    /* Context dependent preprocessing of the payload */
+    switch ($ctx) {
+        case 2: // {<p> style="background-color:red;">RED CODE</p>}
+            $P2="background-color:$P1;";
+            break;        
+        case 3: // '<button onclick="SelectQuotes(0);">BUTTON</button><br>'
+            $P2="SelectQuotes($P1);";
+            break;        
+        case 7: // ''
+            $P2="Hello $P1!";
+            break;            
+        default:
             $P2=$P1;
             break;
+    }
+
+    if ($ctx == 2 or $ctx == 3 or $ctx==7)
+        echo "<p class='info'>AFTER CONTENT DEPENDENT PREFIX/SUFFIX ADDED = " . htmlspecialchars($P2) . "</p>";
+    
+    switch ($quotes) {
+        case 1: 
+            $P3=$P2;
+            break;
         case 2: 
-            $P2="'".$P1."'";
+            $P3="'" . $P2 . "'";
             break;
         case 3: 
-            $P2='"'.$P1.'"';
+            $P3='"' . $P2 . '"';
             break;
     };
-    echo "<p>QUOTED PAYLOAD = ".htmlspecialchars($P2)."</p>";
-    /*
+    echo "<p class='info'>QUOTED PAYLOAD = " . htmlspecialchars($P3) . "</p>";
+        
     switch ($ctx) {
         case 1:
-            echo '<h2>CTX=1 HTML CONTEXT - NO ENCODING => NO SECURITY</h2>';
-            echo "<p>YOUR PAYLOAD IN QUOTES IS: \"$PAYLOAD\"</p><br>";
+            $contextname ='CTX=1 HTML CONTEXT';
+            $P4 = "<p>YOUR PAYLOAD IS: $P3</p>";
             break;
         case 2:
-            echo '<h2>CTX=2 HTML CONTEXT - ENCODED BY htmlspecialchars() (SAFE) - </h2>';
-            echo 'YOUR PAYLOAD IN QUOTES IS: "'.htmlspecialchars($PAYLOAD).'"<br>';
+            $contextname ='HTML ATTRIBUTE (NON-EXECUTABLE)';
+            $P4 = "<p style=$P3>CHANGE BACKGROUND COLOR OF THIS TEXT</p>";
             break;
-        
         case 3:
-            echo '<h2>CTX=3 HTML CONTEXT - with strip_tags($PAYLOAD, "&lt;b&gt;"), BYPASSABLE !!!</h2>';
-            echo 'YOUR PAYLOAD IN QUOTES IS: "'.strip_tags($PAYLOAD,"<b>").'"<br>';
-        break;
-        
+            $contextname ='HTML ATTRIBUTE (EXECUTABLE)';
+            switch ($PAYLOAD) {
+                case 0: $BuText = "SELECT NO QUOTES"; break;
+                case 1: $BuText = "SELECT SINGLE QUOTES"; break;
+                case 2: $BuText = "SELECT DOUBLE QUOTES"; break;
+                default: $BuText = "SELECT QUOTES BY NUMBER";
+            }
+            $P4 = "<button onclick=$P3>$BuText</button><br>";          
+            break;
         case 4:
-        echo '<h2>CTX=4 HTML "EXECUTABLE" ATTRIBUTE - NO ENCODING => NO SECURITY</h2>';
-        echo 'YOUR PAYLOAD AS AN EVENT HANDLER STRING: <br>';
-        echo '<button onclick="Select(' . $PAYLOAD . ')"> BIG BUTTON </button><br>';
-        break;
+            $contextname ='HTML ATTRIBUTE (URL)';
+            $P4 = "<a href=$P3>Follow Me!</a>";
+            break;
 
         case 5:
-            echo '<h2>CTX=5 HTML "EXECUTABLE" ATTRIBUTE - ENCODED BY htmlspecialchars(., ENT_COMPAT) [default in PHP < 8.1] BYPASSABLE !!!</h2>';
-            echo 'YOUR PAYLOAD IN A SINGLE QUOTE ENCLOSED EVENT HANDLER STRING: <br>';
-            echo '<button onclick=\'Select(' . htmlspecialchars($PAYLOAD, ENT_COMPAT) . ')\'> BIG BUTTON </button><br>';
+            $contextname ='JAVASCRIPT EVAL';
+            $P4 = "<p id='res'></p>
+            <script id='evil-script'>
+                pre='The result ';
+                res= (Number.isInteger(eval($P3))) ? 'is' : 'is not';
+                post=' integer.';                
+            document.getElementById('res').innerText=pre+res+post;
+            </script>";
             break;
 
         case 6:
-            echo '<h2>CTX=6 HTML "EXECUTABLE" ATTRIBUTE - ENCODED BY htmlspecialchars(. , ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401) [default in PHP >= 8.1] STILL BYPASSABLE !!!</h2>';
-            echo 'YOUR PAYLOAD AS AN EVENT HANDLER STRING: <br>';
-            echo '<button onclick=\'Select(' . htmlspecialchars($PAYLOAD, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401) . ')\'> BIG BUTTON </button><br>';
+            $contextname ='JAVASCRIPT FUNCTION ARGUMENT';
+            $P4 = "<p id='res'></p>
+            <script id='evil-script'>
+            document.getElementById('res').innerText='Your random number is '+Math.floor(Math.random() * parseInt($P3));
+            </script>";
             break;
-            
-
-
-
+    
         case 7:
-            echo '<h2>CTX=7 HTML "NON-EXECUTABLE" ATTRIBUTE - NO ENCODING => NO SECURITY</h2>';
-            echo 'YOUR PAYLOAD IN AN HTML TAG <b>style</b> DOUBLE QUOTED ATTRIBUTE: <br>';
-            echo '<p style="background-color:'.$PAYLOAD.';">CHANGE BACKGROUND COLOR</p>';
-        break;
+            $contextname ='JAVASCRIPT STRING';
+            $P4 = "<script id='evil-script'> let message = $P3; if (false) alert(message); </script>";
+        break;    
 
         case 8:
-        echo '<h2>CTX=8 HTML "NON-EXECUTABLE" ATTRIBUTE - ENCODED BY htmlspecialchars(., ENT_COMPAT) [default in PHP < 8.1] BYPASSABLE !!!</h2>';
-        echo 'YOUR PAYLOAD IN AN HTML TAG <b>style</b> SINGLE QUOTED ATTRIBUTE: <br>';
-        echo '<p style=\'background-color:'.htmlspecialchars($PAYLOAD,ENT_COMPAT).';\'>CHANGE BACKGROUND COLOR</p>';
-        break;
+            $contextname ='JAVASCRIPT TEMPLATE';
+            $not_so_secure = str_replace('`', '*', $P3); 
+            $P4 = "<script id='evil-script'>  let message = `Hm, $not_so_secure, nice try! But you cannot escape form this template since all backticks was replaced by stars!`; </script>";
+        break;    
 
         case 9:
-            echo '<h2>CTX=7 HTML "NON-EXECUTABLE" ATTRIBUTE - ENCODED BY htmlspecialchars(. , ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401) [default in PHP >= 8.1]</h2>';
-            echo 'YOUR PAYLOAD IN AN HTML TAG <b>style</b> DOUBLE QUOTED ATTRIBUTE: <br>';
-            echo '<p style="background-color:'.htmlspecialchars($PAYLOAD,ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML401).';">CHANGE BACKGROUND COLOR</p>';
+            $contextname ='HTML COMMENT';
+            $P4 = '<!-- THE PAYLOAD SENT WAS ' . $P3 . ' -->';
         break;
-
-        case 9:
-            echo "i equals 9";
-            break;
     }
-*/
+
+    echo "<p class='info'>PAYLOAD INJECTED INTO THE CONTEXT = " . htmlspecialchars($P4) . "</p>";
+    
+    $PREFIX = '<div id="code">';
+    $SUFFIX = '</div>';
+    $CODE = $PREFIX . $P4 . $SUFFIX;
+    
+    echo "<p><h3>PAYLOAD IS INJECTED BELOW</h3></p>";
+    echo $CODE;
+
+
     echo "<script>
     Select('C',$ctx);
     Select('Q',$quotes); 
