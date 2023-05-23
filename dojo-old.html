@@ -1,84 +1,50 @@
-<!DOCTYPE html
-    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <!-- Bootstrap CSS file -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
-    <style>
-        .info {
-            background-color: yellowgreen;
-            margin-bottom: 0;
-        }
-    </style>
+ <head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+ <title>XSS-PHP TEST</title>
 
-
-    <title>XSS-DOJO</title>
-
-    <script>
-        function SelectQuotes(i) {
-            Select('Q', i + 1);
-        };
-        function Select(type, i) {
-            document.getElementById(type + String(i)).setAttribute("checked", true)
-        };
-
-        function autoSubmit() {
-            var formObject = document.forms['my-form'];
-            formObject.submit();
-        };
-
-        function turnhelp() {
-            //reveal help info
-            if(document.getElementById("b-help").getAttribute('state')=='off'){
-               document.getElementById("help").style.display='block';
-               document.getElementById("b-help").innerText='HIDE HELP';
-               document.getElementById("b-help").setAttribute('state','on');
-            } 
-            // hide help info
-            else {
-                $document.getElementById("b-help").innerText='DISPLAY HELP';
-                document.getElementById("help").style.display='none';
-                document.getElementById("b-help").innerText='DISPLAY HELP';
-                document.getElementById("b-help").setAttribute('state','off');
-            }
-        }
+  <script>
+    function SelectQuotes(i) 
+    {
+        Select('Q',i+1);
+    };
+    function Select(type,i) 
+    {
+        document.getElementById(type+String(i)).setAttribute("checked",true)
+    };
+        
+    function autoSubmit()
+    {
+        var formObject = document.forms['my-form'];
+        formObject.submit();
+    };
     </script>
     <!-- <script type="text/javascript" src="src/purify.js"></script> -->
 </head>
-
 <body>
 
-    <h3 class="container py-2 my-0 text-center">XSS-DOJO - THE CONTEXT IS THE KING!</h3>
-    <!-- Bootstrap JS file Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-        crossorigin="anonymous"></script>
-    <p class="container border py-1 my-1">Test injection into different HTML context.</p>
-    <form class="row border py-1 my-1 mx-4" id="my-form" action="" method="post">
-        <?php require("cases.php");
-            echo '<div class="col-md-6 bg-info">';
+    <h1>XSS-PHP CONTEXT IS THE KING!</h1>
+
+ <p>Test injection into different HTML context.</p>
+    <div class="buttons">
+        <form id="my-form" action="" method="post">
+            <?php require("cases.php");
             echo generateRadioButtons($QNAMES, "quotes", "Q"); 
-            echo "<br>";
+            echo "<br>"; 
             echo generateRadioButtons($DNAMES, "defense", "D"); 
-            echo '</div>';
-            echo '<div class="col-md-6 bg-light">';
+            echo "<br>";
             echo generateRadioButtons($CNAMES, "ctx", "C");
-            echo '</div>';
-    ?>
-        <div class='container border my-2 py-2 text-center'>
-            <b>PAYLOAD: </b><input id="payload" type="text" size="40" name="P" value="">
-            <input type="submit" value="Inject">
-            <button id="b-help" state="off" onclick="turnhelp()">DISPLAY HELP</button>
-        </div>
-    </form>
+            ?>        
+           <br><br>
+          <b>PAYLOAD: </b><input id="payload" type="text" name="P" value="">
+          <input type="submit" value="Inject">
+        </form>
+    </div>
 
-
-
-    <?php 
+    
+<?php 
     require("jsEscape.php");
     $ctx=($_POST['ctx']??1);
     $quotes=($_POST['quotes']??1);
@@ -87,8 +53,8 @@
     /* echo "PAYLOAD RECEIVED = ".htmlspecialchars($PAYLOAD); */
 
     $DESCRIPTION=$CNAMES[$ctx]." - ".$QNAMES[$quotes]." - ".$DNAMES[$defense];
-    echo "<h4 class=\"container border bg-warning text-center\"> $DESCRIPTION </h4>";
-    echo "<div id=\"help\" style=\"display:none\" class=\"container  px-0 border \">";
+    echo "<h3> CASE: $DESCRIPTION </h3>";
+    
     $P0 = $PAYLOAD;
 
     switch ($defense) {
@@ -134,14 +100,14 @@
     }
 
     if ($ctx == 2 or $ctx == 3 or $ctx==7)
-        echo "<p class='info' >AFTER CONTENT DEPENDENT PREFIX/SUFFIX ADDED = " . htmlspecialchars($P2) . "</p>";
+        echo "<p class='info'>AFTER CONTENT DEPENDENT PREFIX/SUFFIX ADDED = " . htmlspecialchars($P2) . "</p>";
     
     switch ($quotes) {
         case 1: 
             $P3=$P2;
             break;
         case 2: 
-            $P30="'" . $P2 . "'";
+            $P3="'" . $P2 . "'";
             break;
         case 3: 
             $P3='"' . $P2 . '"';
@@ -177,10 +143,10 @@
             $contextname ='JAVASCRIPT EVAL';
             $P4 = "<p id='res'></p>
             <script id='evil-script'>
-                pre = 'The result ';
-                res = (Number.isInteger(eval($P3))) ? 'is' : 'is not';
-                post = ' integer.';
-                document.getElementById('res').innerText = pre + res + post;
+                pre='The result ';
+                res= (Number.isInteger(eval($P3))) ? 'is' : 'is not';
+                post=' integer.';                
+            document.getElementById('res').innerText=pre+res+post;
             </script>";
             break;
 
@@ -188,7 +154,7 @@
             $contextname ='JAVASCRIPT FUNCTION ARGUMENT';
             $P4 = "<p id='res'></p>
             <script id='evil-script'>
-                document.getElementById('res').innerText = 'Your random number is ' + Math.floor(Math.random() * parseInt($P3));
+            document.getElementById('res').innerText='Your random number is '+Math.floor(Math.random() * parseInt($P3));
             </script>";
             break;
     
@@ -210,20 +176,21 @@
     }
 
     echo "<p class='info'>PAYLOAD INJECTED INTO THE CONTEXT = " . htmlspecialchars($P4) . "</p>";
-    echo "</div>";
-
-    $PREFIX = '<div class="container text-center bg-warning my-1 py-0">';
+    
+    $PREFIX = '<div id="code">';
     $SUFFIX = '</div>';
     $CODE = $PREFIX . $P4 . $SUFFIX;
+    
+    echo "<p><h3>PAYLOAD IS INJECTED BELOW</h3></p>";
     echo $CODE;
 
 
     echo "<script>
-        Select('C', $ctx);
-        Select('Q', $quotes);
-        Select('D', $defense);
-        var clean = '".jsEscape($PAYLOAD)."';
-        document.getElementById(\"payload\").value=clean;</script>"
+    Select('C',$ctx);
+    Select('Q',$quotes); 
+    Select('D',$defense); 
+    var clean = '".jsEscape($PAYLOAD)."';
+    document.getElementById(\"payload\").value=clean;</script>"
     ?>
     <!-- <?php echo json_encode($_REQUEST['my_post'] ?? null) ?> -->
 </body>

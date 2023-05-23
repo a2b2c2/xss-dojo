@@ -24,14 +24,14 @@ $DNAMES =
   "NOTHING", 
   "strip_tags(\$input, \"&lt;b&gt;\")",
   "strip_tags(\$input, \"\")",
-  "htmlspecialchars(\$input, ENT_COMPAT) [default in PHP < 8.1]",
-  "htmlspecialchars(\$input , ENT_QUOTES | ENT_SUBSTIUTE | ENT_HTML401) [default in PHP >= 8.1]",
+  "htmlspecialchars(\$input, ENT_COMPAT)<br>&nbsp&nbsp&nbsp&nbsp;&nbsp;[default in PHP < 8.1]",
+  "htmlspecialchars(\$input , ENT_QUOTES...)<br>&nbsp&nbsp&nbsp&nbsp;&nbsp;[default in PHP >= 8.1]",
   "htmlentities(\$input, ENT_QUOTES, 'UTF-8')",
   "json_encode(\$input)"
   ];
 
 function generateRadioButtons($names, $pm, $type) {
-    $result = "<b>$names[0]</b><br>";
+    $result = "<div class=\"container\"><b>$names[0]</b><br>";
     for($i=1; $i<count($names); $i++) {        
         $result .= 
         "<label>
@@ -39,6 +39,7 @@ function generateRadioButtons($names, $pm, $type) {
         </label>
         <br>";
     }
+    $result .="</div>";
     return $result;
 }; 
   
