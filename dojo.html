@@ -1,7 +1,4 @@
-<!DOCTYPE html
-    PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -15,49 +12,45 @@
         }
     </style>
 
-
     <title>XSS-DOJO</title>
-
-    <script>
-        function SelectQuotes(i) {
-            Select('Q', i + 1);
-        };
-        function Select(type, i) {
-            document.getElementById(type + String(i)).setAttribute("checked", true)
-        };
-
-        function autoSubmit() {
-            var formObject = document.forms['my-form'];
-            formObject.submit();
-        };
-
-        function turnhelp() {
-            //reveal help info
-            if(document.getElementById("b-help").getAttribute('state')=='off'){
-               document.getElementById("help").style.display='block';
-               document.getElementById("b-help").innerText='HIDE HELP';
-               document.getElementById("b-help").setAttribute('state','on');
-            } 
-            // hide help info
-            else {
-                $document.getElementById("b-help").innerText='DISPLAY HELP';
-                document.getElementById("help").style.display='none';
-                document.getElementById("b-help").innerText='DISPLAY HELP';
-                document.getElementById("b-help").setAttribute('state','off');
-            }
-        }
-    </script>
     <!-- <script type="text/javascript" src="src/purify.js"></script> -->
 </head>
 
 <body>
-
-    <h3 class="container py-2 my-0 text-center">XSS-DOJO - THE CONTEXT IS THE KING!</h3>
-    <!-- Bootstrap JS file Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-        crossorigin="anonymous"></script>
-    <p class="container border py-1 my-1">Test injection into different HTML context.</p>
+    
+    <xscript src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+    crossorigin="anonymous">
+    </script>
+    <h3 class="container py-2 my-0 text-center">XSS-DOJO - THE CONTEXT IS THE KING!</h3>    
+    <p class="container text-center py-1 my-1 mx-4">Test 
+    injection into different HTML context. 
+    Use the challenge buttons below to set the parameters or configure them manually. </br>Then enter your 
+    XSS vector and pop up an alert box by XSS!
+    </p>
+    <div class="conatiner text-center border mx-4" id="b-chal">
+        <b> CHALLENGES: </b>&nbsp;
+        <button id="ch1" onclick=SelectAll(1,3,1)>CHAL 1</button>
+        
+        <button id="ch2" onclick=SelectAll(5,1,1)>CHAL 2</button>
+        <button id="ch3" onclick=SelectAll(5,2,7)>CHAL 3</button>
+        <button id="ch4" onclick=SelectAll(9,1,1)>CHAL 4</button>
+        <button id="ch5" onclick=SelectAll(3,3,1)>CHAL 5</button>
+        <button id="ch6" onclick=SelectAll(3,2,4)>CHAL 6</button>
+        
+        <button id="ch7" onclick=SelectAll(2,2,1)>CHAL 7</button>
+        
+        <button id="ch8" onclick=SelectAll(2,2,2)>CHAL 8</button>
+        <button id="ch9" onclick=SelectAll(2,2,3)>CHAL 9</button>
+        <button id="chA" onclick=SelectAll(4,3,6)>CHAL A</button>
+        <button id="chB" onclick=SelectAll(4,2,7)>CHAL B</button>
+        <button id="chC" onclick=SelectAll(6,2,4)>CHAL C</button>     
+        <button id="chD" onclick=SelectAll(8,3,6)>CHAL D</button>
+        
+        <button id="chE" onclick=SelectAll(3,3,7)>CHAL E</button>
+        <button id="chF" onclick=SelectAll(1,3,2)>CHAL F</button>        
+        
+    </div>
     <form class="row border py-1 my-1 mx-4" id="my-form" action="" method="post">
         <?php require("cases.php");
             echo '<div class="col-md-6 bg-info">';
@@ -68,15 +61,13 @@
             echo '<div class="col-md-6 bg-light">';
             echo generateRadioButtons($CNAMES, "ctx", "C");
             echo '</div>';
-    ?>
+        ?>
         <div class='container border my-2 py-2 text-center'>
             <b>PAYLOAD: </b><input id="payload" type="text" size="40" name="P" value="">
             <input type="submit" value="Inject">
-            <button id="b-help" state="off" onclick="turnhelp()">DISPLAY HELP</button>
+            <button id="b-help">DISPLAY HELP</button>
         </div>
     </form>
-
-
 
     <?php 
     require("jsEscape.php");
@@ -141,7 +132,7 @@
             $P3=$P2;
             break;
         case 2: 
-            $P30="'" . $P2 . "'";
+            $P3="'" . $P2 . "'";
             break;
         case 3: 
             $P3='"' . $P2 . '"';
@@ -194,13 +185,13 @@
     
         case 7:
             $contextname ='JAVASCRIPT STRING';
-            $P4 = "<script id='evil-script'> let message = $P3; if (false) alert(message); </script>";
+            $P4 = "<script id='evil-script'> message = $P3; if (false) alert(message); </script>";
         break;    
 
         case 8:
             $contextname ='JAVASCRIPT TEMPLATE';
             $not_so_secure = str_replace('`', '*', $P3); 
-            $P4 = "<script id='evil-script'>  let message = `Hm, $not_so_secure, nice try! But you cannot escape form this template since all backticks was replaced by stars!`; </script>";
+            $P4 = "<script id='evil-script'>  message = `Hm, $not_so_secure, nice try! But you cannot escape form this template since all backticks was replaced by stars!`; </script>";
         break;    
 
         case 9:
@@ -209,7 +200,7 @@
         break;
     }
 
-    echo "<p class='info'>PAYLOAD INJECTED INTO THE CONTEXT = " . htmlspecialchars($P4) . "</p>";
+    echo "<p class='info'>PAYLOAD INJECTED INTO THE CONTEXT = <b>" . htmlspecialchars($P4) . "</b></p>";
     echo "</div>";
 
     $PREFIX = '<div class="container text-center bg-warning my-1 py-0">';
@@ -219,11 +210,98 @@
 
 
     echo "<script>
-        Select('C', $ctx);
-        Select('Q', $quotes);
-        Select('D', $defense);
-        var clean = '".jsEscape($PAYLOAD)."';
-        document.getElementById(\"payload\").value=clean;</script>"
+        //Sanitize and set payload
+        var clean = '" . jsEscape($PAYLOAD) . "'; 
+        document.getElementById(\"payload\").value=clean;
+        </script>";
     ?>
-    <!-- <?php echo json_encode($_REQUEST['my_post'] ?? null) ?> -->
+
+    <script>
+        // Initial Script
+       
+        // JS functions used
+        function SelectQuotes(i) {
+            Select('Q', i + 1);
+        }
+        function Select(type, i) {
+            document.getElementById(type + String(i)).setAttribute("checked", "");
+        }
+
+        function UnSelect(type, i) {
+            document.getElementById(type + String(i)).removeAttribute("checked");
+        }
+
+
+        function autoSubmit() {
+            var formObject = document.forms['my-form'];
+            formObject.submit();
+        }
+
+        function inithelp(){
+            if (!localStorage.hasOwnProperty('help')) {
+                localStorage.help = 0;
+            }
+        }
+            
+        function helpon(){
+            document.getElementById("help").style.display='block';
+            document.getElementById("b-help").innerText='HIDE HELP';
+        }
+
+        function helpoff(){
+            document.getElementById("help").style.display='none';
+            document.getElementById("b-help").innerText='DISPLAY HELP';
+        }
+
+        function updatehelp() {
+            if (localStorage.help == 1) helpon()
+                else helpoff();
+        }
+        function turnhelp() {
+            localStorage.help = (1-localStorage.help)||0;
+            updatehelp();    
+        }
+        
+        function SelectAll(c,q,d) {
+            if (localStorage.hasOwnProperty('C')) {
+                UnSelect('C', localStorage.C);
+            }
+            if (localStorage.hasOwnProperty('Q')) {
+                UnSelect('Q', localStorage.Q);
+            }
+            if (localStorage.hasOwnProperty('D')) {
+                UnSelect('D', localStorage.D);
+            }
+            Select('C', c);   
+            localStorage.C=c;
+            Select('Q', q);  
+            localStorage.Q=q;  
+            Select('D', d); 
+            localStorage.D=d;   
+        }
+        
+        // Setup HELP button in the form
+        document.getElementById("b-help").addEventListener("click", 
+            function(event){
+                // do not submit the form:
+                event.preventDefault();
+                // do action intead
+                turnhelp();
+            }
+        );
+
+
+
+        // Load and apply help status
+        inithelp();
+        updatehelp();
+        // Set radio buttons  
+        if (localStorage.hasOwnProperty('C')) 
+            Select('C', localStorage.C);
+        if (localStorage.hasOwnProperty('Q')) 
+            Select('Q', localStorage.Q);
+        if (localStorage.hasOwnProperty('D')) 
+            Select('D', localStorage.D);
+    </script>
 </body>
+</html>

@@ -35,7 +35,7 @@ function generateRadioButtons($names, $pm, $type) {
     for($i=1; $i<count($names); $i++) {        
         $result .= 
         "<label>
-        <input id='$type$i' type='radio' name='$pm' value='$i' onClick='autoSubmit();'> $names[$i]
+        <input id='$type$i' type='radio' name='$pm' value='$i' onClick='localStorage.$type=$i; autoSubmit();'> $names[$i]
         </label>
         <br>";
     }
